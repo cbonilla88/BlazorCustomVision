@@ -1,0 +1,62 @@
+﻿@page "/predictions"
+@using BlazorCustomVision.Data
+
+@inject TobaccoPredictionsService tobaccoPredictionsService
+
+<div class="container-fluid">
+    <h1>Detección de marcas de tabaco</h1>
+    <p>Aqui podrás probar tus images para detectar marcas de tabaco. Introduce la URL de tu imagen.</p>
+</div>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-10">
+            <input type="text" style="width:100%" @bind="@urlFile" />
+        </div>
+        <div class="col-2">
+            <button @onclick="@ReadFile">Cargar imagen</button>
+        </div>
+    </div>
+</div>
+
+<hl></hl>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-auto">
+            @if (loading)
+            {
+                <p><em>Procesando, por favor espere ...</em></p>
+            }
+
+            @if (response != null && !string.IsNullOrWhiteSpace(response.ImageInBase64) && string.IsNullOrWhiteSpace(response.Error))
+            {
+                <p><em>Tiempo llamada Custom Vision API: @response.ElapsedTime</em></p>
+                <img src="data:image/png;base64, @response.ImageInBase64" />
+            }
+
+
+            @if (response != null && !string.IsNullOrWhiteSpace(response.Error))
+            {
+                <p><em>@response.Error</em></p>
+            }
+        </div>
+    </div>
+</div>
+
+@code
+{
+    ElementRef inputTypeFileElement;
+    bool loading = false;
+    public string urlFile { get; set; } = "https://www.publico.es/uploads/2017/06/20/5948e3183c87b.jpg";
+    CustomVisionResponse response = null;
+
+    public async Task ReadFile()
+    {
+        loading = true;
+
+        response = await tobaccoPredictionsService.PredictFromURL(urlFile);
+
+        loading = false;
+    }
+}
